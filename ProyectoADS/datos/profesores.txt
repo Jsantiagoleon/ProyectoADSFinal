@@ -1,0 +1,2 @@
+P001;DOC001;Juan Perez;juan.perez@uni.edu;16;3000000
+P002;DOC002;Ana Gomez;ana.gomez@uni.edu;12;2800000
