@@ -662,8 +662,10 @@ public class MainFX extends Application {
 
     private void inicializarDatosEjemplo() {
         // Profesores
-        Profesor p1 = new Profesor("Juan Perez", "P001", "DOC001", "juan@uni.edu", 10, true);
-        Profesor p2 = new Profesor("Ana Garcia", "P002", "DOC002", "ana@uni.edu", 5, false);
+        Profesor p1 = new Profesor("juan.perez@uni.edu", "Juan Perez",
+                16, 3_000_000, "DOC001", "P001");
+        Profesor p2 = new Profesor("ana.garcia@uni.edu", "Ana Garcia",
+                12, 2_800_000, "DOC002", "P002");
         profesores.add(p1);
         profesores.add(p2);
 
