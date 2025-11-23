@@ -1,0 +1,34 @@
+.tab-pane *.tab-header-area *.tab {
+    -fx-background-insets: 0;
+    -fx-padding: 8 12 8 12;
+}
+
+.tab-pane *.tab-header-area *.tab:selected {
+    -fx-background-color: linear-gradient(to right, #2563eb, #1d4ed8);
+    -fx-text-base-color: white;
+    -fx-background-radius: 10 10 0 0;
+}
+
+.tab-pane *.tab-header-area *.tab-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #0f172a;
+}
+
+.tab-pane *.tab-header-area *.tab:selected *.tab-label {
+    -fx-text-fill: white;
+}
+
+.list-view {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-color: #e2e8f0;
+}
+
+.label {
+    -fx-font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+.separator *.line {
+    -fx-background-color: #e2e8f0;
+}

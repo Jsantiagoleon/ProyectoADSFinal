@@ -9,10 +9,16 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -23,17 +29,34 @@ import java.util.Set;
 public class MainFX extends Application {
 
     // ====== DATOS EN MEMORIA ======
-    private List<Profesor> profesores;
-    private List<Asignatura> asignaturas;
-    private List<Estudiante> estudiantes;
-    private List<Departamento> departamentos;
+    private final List<Profesor> profesores = new ArrayList<>();
+    private final List<Asignatura> asignaturas = new ArrayList<>();
+    private final List<Estudiante> estudiantes = new ArrayList<>();
+    private final List<Departamento> departamentos = new ArrayList<>();
 
-    // ====== ARRANQUE ======
+    private static final String CARD_STYLE = "-fx-background-color: rgba(255,255,255,0.9);" +
+            "-fx-background-radius: 12;" +
+            "-fx-padding: 14;" +
+            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 10,0,0,4);";
+
     @Override
     public void start(Stage primaryStage) {
         inicializarDatosEjemplo();
 
+        BorderPane layout = new BorderPane();
+        layout.setStyle("-fx-background-color: linear-gradient(to bottom right, #0f172a, #1e3a8a);" +
+                "-fx-padding: 18;");
+
+        Label header = new Label("Sistema de Gestión de Asignaturas");
+        header.setTextFill(Color.WHITE);
+        header.setFont(Font.font("Inter", FontWeight.BOLD, 26));
+        layout.setTop(header);
+        BorderPane.setMargin(header, new Insets(0, 0, 12, 6));
+
         TabPane tabPane = new TabPane();
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        tabPane.setStyle("-fx-background-radius: 12; -fx-padding: 6;" +
+                "-fx-background-color: transparent;");
 
         tabPane.getTabs().addAll(
                 crearTabProfesorSemestre(),
@@ -45,10 +68,11 @@ public class MainFX extends Application {
                 crearTabCrearAsignatura()
         );
 
-        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        layout.setCenter(tabPane);
 
-        Scene scene = new Scene(tabPane, 950, 600);
-        primaryStage.setTitle("Sistema de Gestión de Asignaturas - JavaFX");
+        Scene scene = new Scene(layout, 1050, 700);
+        scene.getStylesheets().add(MainFX.class.getResource("/com/example/proyectoads/style.css").toExternalForm());
+        primaryStage.setTitle("Sistema de Gestión de Asignaturas");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -65,20 +89,17 @@ public class MainFX extends Application {
     private Tab crearTabProfesorSemestre() {
         Tab tab = new Tab("Prof. vs Semestre");
 
-        Label titulo = new Label("Consultar asignaturas dictadas por un profesor en un semestre");
+        VBox card = crearCardBase("Asignaturas por profesor y semestre",
+                "Consulta rápida de materias asignadas en un periodo específico.");
 
-        TextField txtIdProfesor = new TextField();
-        txtIdProfesor.setPromptText("id_Profesor o codDocente (P001, DOC001, etc.)");
+        TextField txtIdProfesor = crearTextField("id_Profesor o codDocente (P001, DOC001, ...)");
+        TextField txtSemestre = crearTextField("Semestre (ej: 2025-1)");
+        Button btnBuscar = crearBotonPrimario("Buscar");
 
-        TextField txtSemestre = new TextField();
-        txtSemestre.setPromptText("Semestre (ej: 2025-1)");
-
-        Button btnBuscar = new Button("Buscar");
-
-        Label lblProfesor = new Label();
-        Label lblMensaje = new Label();
-
+        Label lblProfesor = crearLabelSecundario();
+        Label lblMensaje = crearLabelError();
         ListView<String> listaAsignaturas = new ListView<>();
+        listaAsignaturas.setPrefHeight(220);
 
         btnBuscar.setOnAction(e -> {
             lblProfesor.setText("");
@@ -120,18 +141,10 @@ public class MainFX extends Application {
                 new Label("Semestre:"), txtSemestre,
                 btnBuscar
         );
-        filaEntrada.setPadding(new Insets(10));
+        filaEntrada.setAlignment(Pos.CENTER_LEFT);
 
-        VBox root = new VBox(10,
-                titulo,
-                filaEntrada,
-                lblProfesor,
-                lblMensaje,
-                listaAsignaturas
-        );
-        root.setPadding(new Insets(15));
-
-        tab.setContent(root);
+        card.getChildren().addAll(filaEntrada, lblProfesor, lblMensaje, listaAsignaturas);
+        tab.setContent(card);
         return tab;
     }
 
@@ -139,17 +152,16 @@ public class MainFX extends Application {
     private Tab crearTabInfoAsignatura() {
         Tab tab = new Tab("Info Asignatura");
 
-        Label titulo = new Label("Consultar información de una asignatura");
+        VBox card = crearCardBase("Información de asignatura",
+                "Datos completos de la materia, sus clases y docentes.");
 
-        TextField txtCodigo = new TextField();
-        txtCodigo.setPromptText("Código de la asignatura (ADS101, BD102, ...)");
+        TextField txtCodigo = crearTextField("Código de la asignatura (ADS101, BD102, ...)");
+        Button btnBuscar = crearBotonPrimario("Buscar");
 
-        Button btnBuscar = new Button("Buscar");
-
-        Label lblDatosBasicos = new Label();
-        Label lblMensaje = new Label();
-
+        Label lblDatosBasicos = crearLabelSecundario();
+        Label lblMensaje = crearLabelError();
         ListView<String> listaClases = new ListView<>();
+        listaClases.setPrefHeight(240);
 
         btnBuscar.setOnAction(e -> {
             lblDatosBasicos.setText("");
@@ -198,19 +210,11 @@ public class MainFX extends Application {
         });
 
         HBox filaEntrada = new HBox(10, new Label("Código:"), txtCodigo, btnBuscar);
-        filaEntrada.setPadding(new Insets(10));
+        filaEntrada.setAlignment(Pos.CENTER_LEFT);
 
-        VBox root = new VBox(10,
-                titulo,
-                filaEntrada,
-                lblDatosBasicos,
-                lblMensaje,
-                new Label("Clases de la asignatura:"),
-                listaClases
-        );
-        root.setPadding(new Insets(15));
-
-        tab.setContent(root);
+        card.getChildren().addAll(filaEntrada, lblDatosBasicos, lblMensaje,
+                new Label("Clases de la asignatura:"), listaClases);
+        tab.setContent(card);
         return tab;
     }
 
@@ -218,15 +222,16 @@ public class MainFX extends Application {
     private Tab crearTabGestionEstudiante() {
         Tab tab = new Tab("Gestión Estudiante");
 
-        Label titulo = new Label("Gestionar asignaturas de un estudiante (adicionar, retirar, cambiar)");
+        VBox card = crearCardBase("Inscripción y gestión de clases",
+                "Consulta, inscribe, retira o cambia materias de forma guiada.");
 
         // ---- VER CLASES DEL ESTUDIANTE ----
-        TextField txtIdEstVer = new TextField();
-        txtIdEstVer.setPromptText("Id estudiante (E001, E002, ...)");
-        Button btnVer = new Button("Ver clases");
-        Label lblEstVer = new Label();
+        TextField txtIdEstVer = crearTextField("Id estudiante (E001, E002, ...)");
+        Button btnVer = crearBotonPrimario("Ver clases");
+        Label lblEstVer = crearLabelSecundario();
         ListView<String> listaClasesEst = new ListView<>();
-        Label lblMensajeVer = new Label();
+        listaClasesEst.setPrefHeight(160);
+        Label lblMensajeVer = crearLabelError();
 
         btnVer.setOnAction(e -> {
             lblEstVer.setText("");
@@ -260,14 +265,13 @@ public class MainFX extends Application {
         });
 
         HBox filaVer = new HBox(10, new Label("Id estudiante:"), txtIdEstVer, btnVer);
+        filaVer.setAlignment(Pos.CENTER_LEFT);
 
         // ---- ADICIONAR CLASE ----
-        TextField txtIdEstAdd = new TextField();
-        txtIdEstAdd.setPromptText("Id estudiante");
-        TextField txtIdClaseAdd = new TextField();
-        txtIdClaseAdd.setPromptText("Id clase (C001, C002, ...)");
-        Button btnAdd = new Button("Adicionar");
-        Label lblMsgAdd = new Label();
+        TextField txtIdEstAdd = crearTextField("Id estudiante");
+        TextField txtIdClaseAdd = crearTextField("Id clase (C001, C002, ...)");
+        Button btnAdd = crearBotonSecundario("Adicionar");
+        Label lblMsgAdd = crearLabelSecundario();
 
         btnAdd.setOnAction(e -> {
             String msg = adicionarClaseAEstudiante(txtIdEstAdd.getText().trim(),
@@ -280,14 +284,13 @@ public class MainFX extends Application {
                 new Label("Id clase:"), txtIdClaseAdd,
                 btnAdd
         );
+        filaAdd.setAlignment(Pos.CENTER_LEFT);
 
         // ---- RETIRAR CLASE ----
-        TextField txtIdEstRet = new TextField();
-        txtIdEstRet.setPromptText("Id estudiante");
-        TextField txtIdClaseRet = new TextField();
-        txtIdClaseRet.setPromptText("Id clase");
-        Button btnRet = new Button("Retirar");
-        Label lblMsgRet = new Label();
+        TextField txtIdEstRet = crearTextField("Id estudiante");
+        TextField txtIdClaseRet = crearTextField("Id clase");
+        Button btnRet = crearBotonSecundario("Retirar");
+        Label lblMsgRet = crearLabelSecundario();
 
         btnRet.setOnAction(e -> {
             String msg = retirarClaseDeEstudiante(txtIdEstRet.getText().trim(),
@@ -300,16 +303,14 @@ public class MainFX extends Application {
                 new Label("Id clase:"), txtIdClaseRet,
                 btnRet
         );
+        filaRet.setAlignment(Pos.CENTER_LEFT);
 
         // ---- CAMBIAR CLASE ----
-        TextField txtIdEstCamb = new TextField();
-        txtIdEstCamb.setPromptText("Id estudiante");
-        TextField txtIdClaseAct = new TextField();
-        txtIdClaseAct.setPromptText("Id clase actual");
-        TextField txtIdClaseNueva = new TextField();
-        txtIdClaseNueva.setPromptText("Id clase nueva");
-        Button btnCamb = new Button("Cambiar");
-        Label lblMsgCamb = new Label();
+        TextField txtIdEstCamb = crearTextField("Id estudiante");
+        TextField txtIdClaseAct = crearTextField("Id clase actual");
+        TextField txtIdClaseNueva = crearTextField("Id clase nueva");
+        Button btnCamb = crearBotonSecundario("Cambiar");
+        Label lblMsgCamb = crearLabelSecundario();
 
         btnCamb.setOnAction(e -> {
             String msg = cambiarClaseDeEstudiante(
@@ -326,6 +327,7 @@ public class MainFX extends Application {
                 new Label("Clase nueva:"), txtIdClaseNueva,
                 btnCamb
         );
+        filaCamb.setAlignment(Pos.CENTER_LEFT);
 
         // ---- LISTA DE TODAS LAS CLASES DISPONIBLES ----
         ListView<String> listaClasesSistema = new ListView<>();
@@ -337,14 +339,15 @@ public class MainFX extends Application {
             }
         }
         listaClasesSistema.setItems(itemsClases);
+        listaClasesSistema.setPrefHeight(170);
 
-        VBox root = new VBox(10,
-                titulo,
+        card.getChildren().addAll(
                 new Label("---- Ver clases de un estudiante ----"),
                 filaVer,
                 lblEstVer,
                 lblMensajeVer,
                 listaClasesEst,
+                new Separator(),
                 new Label("---- Adicionar clase ----"),
                 filaAdd,
                 lblMsgAdd,
@@ -357,9 +360,8 @@ public class MainFX extends Application {
                 new Label("---- Clases disponibles en el sistema ----"),
                 listaClasesSistema
         );
-        root.setPadding(new Insets(15));
 
-        tab.setContent(root);
+        tab.setContent(card);
         return tab;
     }
 
@@ -367,17 +369,16 @@ public class MainFX extends Application {
     private Tab crearTabEstudiantesAsignatura() {
         Tab tab = new Tab("Estudiantes por Asig.");
 
-        Label titulo = new Label("Consultar estudiantes inscritos en una asignatura específica");
+        VBox card = crearCardBase("Estudiantes inscritos",
+                "Encuentra rápidamente quién cursa cada asignatura.");
 
-        TextField txtCodigo = new TextField();
-        txtCodigo.setPromptText("Código de la asignatura");
+        TextField txtCodigo = crearTextField("Código de la asignatura");
+        Button btnBuscar = crearBotonPrimario("Buscar");
 
-        Button btnBuscar = new Button("Buscar");
-
-        Label lblInfoAsig = new Label();
-        Label lblMensaje = new Label();
-
+        Label lblInfoAsig = crearLabelSecundario();
+        Label lblMensaje = crearLabelError();
         ListView<String> listaEstudiantes = new ListView<>();
+        listaEstudiantes.setPrefHeight(240);
 
         btnBuscar.setOnAction(e -> {
             lblInfoAsig.setText("");
@@ -413,18 +414,16 @@ public class MainFX extends Application {
         });
 
         HBox filaEntrada = new HBox(10, new Label("Código:"), txtCodigo, btnBuscar);
-        filaEntrada.setPadding(new Insets(10));
+        filaEntrada.setAlignment(Pos.CENTER_LEFT);
 
-        VBox root = new VBox(10,
-                titulo,
+        card.getChildren().addAll(
                 filaEntrada,
                 lblInfoAsig,
                 lblMensaje,
                 listaEstudiantes
         );
-        root.setPadding(new Insets(15));
 
-        tab.setContent(root);
+        tab.setContent(card);
         return tab;
     }
 
@@ -432,17 +431,16 @@ public class MainFX extends Application {
     private Tab crearTabAsignaturasPorDepartamento() {
         Tab tab = new Tab("Asig. por Depto.");
 
-        Label titulo = new Label("Consultar las asignaturas ofrecidas por un departamento específico");
+        VBox card = crearCardBase("Asignaturas por departamento",
+                "Visualiza el catálogo de materias en cada área académica.");
 
-        TextField txtIdDep = new TextField();
-        txtIdDep.setPromptText("Id departamento (1, 2, ...)");
+        TextField txtIdDep = crearTextField("Id departamento (1, 2, ...)");
+        Button btnBuscar = crearBotonPrimario("Buscar");
 
-        Button btnBuscar = new Button("Buscar");
-
-        Label lblInfoDep = new Label();
-        Label lblMensaje = new Label();
-
+        Label lblInfoDep = crearLabelSecundario();
+        Label lblMensaje = crearLabelError();
         ListView<String> listaAsignaturas = new ListView<>();
+        listaAsignaturas.setPrefHeight(220);
 
         // Mostrar también los deptos disponibles
         ListView<String> listaDepartamentos = new ListView<>();
@@ -451,6 +449,7 @@ public class MainFX extends Application {
             itemsDep.add(d.getIdDepartamento() + " - " + d.getNombreDepartamento());
         }
         listaDepartamentos.setItems(itemsDep);
+        listaDepartamentos.setPrefHeight(120);
 
         btnBuscar.setOnAction(e -> {
             lblInfoDep.setText("");
@@ -493,10 +492,9 @@ public class MainFX extends Application {
         });
 
         HBox filaEntrada = new HBox(10, new Label("Id depto:"), txtIdDep, btnBuscar);
-        filaEntrada.setPadding(new Insets(10));
+        filaEntrada.setAlignment(Pos.CENTER_LEFT);
 
-        VBox root = new VBox(10,
-                titulo,
+        card.getChildren().addAll(
                 new Label("Departamentos disponibles:"),
                 listaDepartamentos,
                 filaEntrada,
@@ -505,9 +503,8 @@ public class MainFX extends Application {
                 new Label("Asignaturas del departamento:"),
                 listaAsignaturas
         );
-        root.setPadding(new Insets(15));
 
-        tab.setContent(root);
+        tab.setContent(card);
         return tab;
     }
 
@@ -515,165 +512,163 @@ public class MainFX extends Application {
     private Tab crearTabInfoProfesor() {
         Tab tab = new Tab("Info Profesor");
 
-        Label titulo = new Label("Consultar información de un profesor");
+        VBox card = crearCardBase("Información de profesor",
+                "Consulta datos de contacto y clases asignadas.");
 
-        TextField txtId = new TextField();
-        txtId.setPromptText("id_Profesor o codDocente");
-
-        Button btnBuscar = new Button("Buscar");
-
-        Label lblInfo = new Label();
-        Label lblMensaje = new Label();
+        TextField txtId = crearTextField("id_Profesor o codDocente");
+        Button btnBuscar = crearBotonPrimario("Buscar");
+        Label lblInfo = crearLabelSecundario();
+        Label lblMensaje = crearLabelError();
+        ListView<String> listaClases = new ListView<>();
+        listaClases.setPrefHeight(220);
 
         btnBuscar.setOnAction(e -> {
             lblInfo.setText("");
             lblMensaje.setText("");
+            listaClases.getItems().clear();
 
             String id = txtId.getText().trim();
             if (id.isEmpty()) {
-                lblMensaje.setText("Debe ingresar el id del profesor.");
+                lblMensaje.setText("Debe ingresar el id o código del profesor.");
                 return;
             }
 
             Profesor p = buscarProfesorPorIdOCod(id);
             if (p == null) {
-                lblMensaje.setText("El profesor no existe.");
+                lblMensaje.setText("No se encontró profesor con id/código: " + id);
+                return;
+            }
+
+            lblInfo.setText("Profesor: " + p.getNombre() + " | Email: " + p.getEmail());
+
+            ObservableList<String> items = FXCollections.observableArrayList();
+            for (Asignatura a : asignaturas) {
+                if (a.getClases() == null) continue;
+                for (Clase c : a.getClases()) {
+                    if (c.getProfesor() != null && p.getId_Profesor().equals(c.getProfesor().getId_Profesor())) {
+                        items.add(a.getCodigoAsignatura() + " - " + a.getNombreAsignatura()
+                                + " | Clase " + c.getIdClase()
+                                + " | Semestre: " + c.getSemestre()
+                                + " | Horario: " + c.getDias() + " " + c.getHoras());
+                    }
+                }
+            }
+
+            if (items.isEmpty()) {
+                lblMensaje.setText("El profesor no tiene clases asignadas.");
             } else {
-                lblInfo.setText("Nombre: " + p.getNombre()
-                        + " | Correo: " + p.getEmail()
-                        + " | id_Profesor: " + p.getId_Profesor()
-                        + " | codDocente: " + p.getCodDocente()
-                        + " | Horas semanales: " + p.getHorasSemanales()
-                        + " | Sueldo: " + p.getSueldo());
+                listaClases.setItems(items);
             }
         });
 
-        HBox fila = new HBox(10, new Label("Id profesor:"), txtId, btnBuscar);
-        fila.setPadding(new Insets(10));
+        HBox filaEntrada = new HBox(10, new Label("Id/Código:"), txtId, btnBuscar);
+        filaEntrada.setAlignment(Pos.CENTER_LEFT);
 
-        VBox root = new VBox(10,
-                titulo,
-                fila,
-                lblMensaje,
-                lblInfo
-        );
-        root.setPadding(new Insets(15));
-
-        tab.setContent(root);
+        card.getChildren().addAll(filaEntrada, lblInfo, lblMensaje, listaClases);
+        tab.setContent(card);
         return tab;
     }
 
-    // 7. Crear nuevas asignaturas
+    // 7. Crear nueva asignatura
     private Tab crearTabCrearAsignatura() {
         Tab tab = new Tab("Crear Asignatura");
 
-        Label titulo = new Label("Crear nueva asignatura");
+        VBox card = crearCardBase("Crear nueva asignatura",
+                "Registra rápidamente una materia y asígnala a un departamento.");
 
-        TextField txtCodigo = new TextField();
-        txtCodigo.setPromptText("Código (único)");
-
-        TextField txtNombre = new TextField();
-        txtNombre.setPromptText("Nombre");
-
-        TextField txtCreditos = new TextField();
-        txtCreditos.setPromptText("Créditos (número)");
-
+        TextField txtCodigo = crearTextField("Código (ej: PRG201)");
+        TextField txtNombre = crearTextField("Nombre de la asignatura");
+        TextField txtCreditos = crearTextField("Créditos");
         CheckBox chkIngles = new CheckBox("Requiere examen de inglés");
+        ComboBox<Departamento> cbDepartamento = new ComboBox<>();
+        cbDepartamento.setPromptText("Departamento");
+        cbDepartamento.setItems(FXCollections.observableArrayList(departamentos));
+        cbDepartamento.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(Departamento item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item.getNombreDepartamento());
+            }
+        });
+        cbDepartamento.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Departamento item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? "Selecciona un departamento" : item.getNombreDepartamento());
+            }
+        });
 
-        TextField txtIdDep = new TextField();
-        txtIdDep.setPromptText("Id departamento (opcional)");
-
-        Button btnCrear = new Button("Crear");
-
-        Label lblMensaje = new Label();
+        Button btnCrear = crearBotonPrimario("Crear asignatura");
+        Label lblMensaje = crearLabelSecundario();
 
         btnCrear.setOnAction(e -> {
+            lblMensaje.setText("");
             String codigo = txtCodigo.getText().trim();
             String nombre = txtNombre.getText().trim();
-            String credTxt = txtCreditos.getText().trim();
-            String depTxt = txtIdDep.getText().trim();
-            boolean reqIngles = chkIngles.isSelected();
+            String creditosTxt = txtCreditos.getText().trim();
+            Departamento dep = cbDepartamento.getValue();
 
-            lblMensaje.setText("");
-
-            if (codigo.isEmpty() || nombre.isEmpty() || credTxt.isEmpty()) {
-                lblMensaje.setText("Código, nombre y créditos son obligatorios.");
+            if (codigo.isEmpty() || nombre.isEmpty() || creditosTxt.isEmpty()) {
+                lblMensaje.setText("Complete todos los campos obligatorios.");
                 return;
             }
 
             int creditos;
             try {
-                creditos = Integer.parseInt(credTxt);
+                creditos = Integer.parseInt(creditosTxt);
             } catch (NumberFormatException ex) {
-                lblMensaje.setText("Los créditos deben ser un número entero.");
+                lblMensaje.setText("Los créditos deben ser un número.");
                 return;
             }
 
             if (buscarAsignaturaPorCodigo(codigo) != null) {
-                lblMensaje.setText("Ya existe una asignatura con el código " + codigo);
+                lblMensaje.setText("Ya existe una asignatura con ese código.");
                 return;
             }
 
-            Asignatura nueva = new Asignatura(codigo, nombre, creditos, reqIngles);
+            Asignatura nueva = new Asignatura(codigo, nombre, creditos, chkIngles.isSelected());
             asignaturas.add(nueva);
-
-            if (!depTxt.isEmpty()) {
-                try {
-                    int idDep = Integer.parseInt(depTxt);
-                    Departamento dep = buscarDepartamentoPorId(idDep);
-                    if (dep != null) {
-                        dep.getAsignaturas().add(nueva);
-                        nueva.setDepartamento(dep);
-                    } else {
-                        lblMensaje.setText("Asignatura creada, pero no se encontró el departamento con id " + idDep);
-                        return;
-                    }
-                } catch (NumberFormatException ex) {
-                    lblMensaje.setText("Asignatura creada, pero el id de departamento no es numérico.");
-                    return;
-                }
+            if (dep != null) {
+                nueva.setDepartamento(dep);
+                dep.getAsignaturas().add(nueva);
             }
 
-            lblMensaje.setText("Asignatura creada correctamente: "
-                    + nueva.getCodigoAsignatura() + " - " + nueva.getNombreAsignatura());
+            lblMensaje.setText("Asignatura creada exitosamente.");
+            txtCodigo.clear();
+            txtNombre.clear();
+            txtCreditos.clear();
+            chkIngles.setSelected(false);
+            cbDepartamento.setValue(null);
         });
 
-        VBox root = new VBox(10,
-                titulo,
-                new HBox(10, new Label("Código:"), txtCodigo),
-                new HBox(10, new Label("Nombre:"), txtNombre),
-                new HBox(10, new Label("Créditos:"), txtCreditos),
+        VBox.setVgrow(cbDepartamento, Priority.NEVER);
+        card.getChildren().addAll(
+                new Label("Código:"), txtCodigo,
+                new Label("Nombre:"), txtNombre,
+                new Label("Créditos:"), txtCreditos,
                 chkIngles,
-                new HBox(10, new Label("Id departamento:"), txtIdDep),
+                new Label("Departamento:"), cbDepartamento,
                 btnCrear,
                 lblMensaje
         );
-        root.setPadding(new Insets(15));
 
-        tab.setContent(root);
+        tab.setContent(card);
         return tab;
     }
 
     // ============================================================
-    // ===============  LÓGICA / "CONTROLADOR"  ===================
+    // ====================  DATOS MOCK  ==========================
     // ============================================================
 
     private void inicializarDatosEjemplo() {
-        profesores = new ArrayList<>();
-        asignaturas = new ArrayList<>();
-        estudiantes = new ArrayList<>();
-        departamentos = new ArrayList<>();
-
         // Profesores
-        Profesor p1 = new Profesor("juan.perez@uni.edu", "Juan Perez",
-                16, 3000000, "DOC001", "P001");
-        Profesor p2 = new Profesor("ana.gomez@uni.edu", "Ana Gomez",
-                12, 2800000, "DOC002", "P002");
+        Profesor p1 = new Profesor("Juan Perez", "P001", "DOC001", "juan@uni.edu", 10, true);
+        Profesor p2 = new Profesor("Ana Garcia", "P002", "DOC002", "ana@uni.edu", 5, false);
         profesores.add(p1);
         profesores.add(p2);
 
         // Asignaturas
-        Asignatura a1 = new Asignatura("ADS101", "Analisis y Diseno de SW", 3, false);
+        Asignatura a1 = new Asignatura("ADS101", "Análisis y Diseño de Sistemas", 4, true);
         Asignatura a2 = new Asignatura("BD102", "Bases de Datos", 4, false);
         Asignatura a3 = new Asignatura("RED103", "Redes de Computadores", 3, false);
         asignaturas.add(a1);
@@ -721,6 +716,10 @@ public class MainFX extends Application {
         a2.setDepartamento(depSis);
         a3.setDepartamento(depTele);
     }
+
+    // ============================================================
+    // ====================  OPERACIONES  =========================
+    // ============================================================
 
     private Profesor buscarProfesorPorIdOCod(String id) {
         if (id == null) return null;
@@ -878,619 +877,10 @@ public class MainFX extends Application {
 
         if (!claseActual.getEstudiantesInscritos().contains(est)) {
             return "El estudiante no está inscrito en la clase actual.";
-        }package com.example.proyectoads;
-
-import Modelo.*;
-import Serializacion.Serializacion; // Asegurate de tener esta clase o usar la logica interna
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
-
-import java.io.*;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-        public class MainFX extends Application {
-
-            // ====== DATOS EN MEMORIA ======
-            private List<Profesor> profesores;
-            private List<Asignatura> asignaturas;
-            private List<Estudiante> estudiantes;
-            private List<Departamento> departamentos;
-
-            // Rutas de archivos para persistencia
-            private final String FILE_PROFESORES = "datos/profesores.json";
-            private final String FILE_ASIGNATURAS = "datos/asignaturas.json";
-            private final String FILE_ESTUDIANTES = "datos/estudiantes.json";
-            private final String FILE_DEPARTAMENTOS = "datos/departamentos.json";
-
-            @Override
-            public void start(Stage primaryStage) {
-                // 1. Cargar datos al iniciar
-                cargarDatos();
-
-                // Si no hay datos (primera vez), cargar ejemplos
-                if (profesores.isEmpty() && asignaturas.isEmpty()) {
-                    inicializarDatosEjemplo();
-                }
-
-                TabPane tabPane = new TabPane();
-
-                tabPane.getTabs().addAll(
-                        crearTabProfesorSemestre(),
-                        crearTabInfoAsignatura(),
-                        crearTabGestionEstudiante(),
-                        crearTabEstudiantesAsignatura(),
-                        crearTabAsignaturasPorDepartamento(),
-                        crearTabInfoProfesor(),
-                        crearTabCrearAsignatura()
-                );
-
-                tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
-
-                Scene scene = new Scene(tabPane, 950, 650);
-                primaryStage.setTitle("Sistema de Gestión de Asignaturas - JavaFX");
-                primaryStage.setScene(scene);
-
-                // 2. Guardar datos al cerrar la ventana
-                primaryStage.setOnCloseRequest(event -> {
-                    guardarDatos();
-                    System.out.println("Datos guardados correctamente al salir.");
-                });
-
-                primaryStage.show();
-            }
-
-            public static void main(String[] args) {
-                launch(args);
-            }
-
-            // ============================================================
-            // ==================== PERSISTENCIA (JSON) ===================
-            // ============================================================
-
-            private void guardarDatos() {
-                crearDirectorioDatos();
-                guardarListaJson(profesores, FILE_PROFESORES);
-                guardarListaJson(asignaturas, FILE_ASIGNATURAS);
-                guardarListaJson(estudiantes, FILE_ESTUDIANTES);
-                guardarListaJson(departamentos, FILE_DEPARTAMENTOS);
-            }
-
-            private void cargarDatos() {
-                profesores = cargarListaJson(FILE_PROFESORES, new TypeToken<List<Profesor>>(){}.getType());
-                asignaturas = cargarListaJson(FILE_ASIGNATURAS, new TypeToken<List<Asignatura>>(){}.getType());
-                estudiantes = cargarListaJson(FILE_ESTUDIANTES, new TypeToken<List<Estudiante>>(){}.getType());
-                departamentos = cargarListaJson(FILE_DEPARTAMENTOS, new TypeToken<List<Departamento>>(){}.getType());
-
-                // Inicializar listas si falló la carga
-                if (profesores == null) profesores = new ArrayList<>();
-                if (asignaturas == null) asignaturas = new ArrayList<>();
-                if (estudiantes == null) estudiantes = new ArrayList<>();
-                if (departamentos == null) departamentos = new ArrayList<>();
-
-                // Reconstruir relaciones (enlaces) si es necesario,
-                // ya que JSON guarda copias, no referencias.
-                // Para un proyecto académico simple, esto puede dejarse así,
-                // pero idealmente deberías reconectar los objetos por ID.
-            }
-
-            private void crearDirectorioDatos() {
-                File dir = new File("datos");
-                if (!dir.exists()) {
-                    dir.mkdir();
-                }
-            }
-
-            private <T> void guardarListaJson(List<T> lista, String ruta) {
-                try (Writer writer = new FileWriter(ruta)) {
-                    Gson gson = new Gson();
-                    gson.toJson(lista, writer);
-                } catch (IOException e) {
-                    System.err.println("Error guardando en " + ruta + ": " + e.getMessage());
-                }
-            }
-
-            private <T> List<T> cargarListaJson(String ruta, Type tipoLista) {
-                File archivo = new File(ruta);
-                if (!archivo.exists()) return new ArrayList<>();
-
-                try (Reader reader = new FileReader(ruta)) {
-                    Gson gson = new Gson();
-                    return gson.fromJson(reader, tipoLista);
-                } catch (IOException e) {
-                    System.err.println("Error cargando de " + ruta + ": " + e.getMessage());
-                    return new ArrayList<>();
-                }
-            }
-
-            // ============================================================
-            // ================  TABS / CASOS DE USO  =====================
-            // ============================================================
-
-            // 1. Consultar asignaturas por profesor y semestre
-            private Tab crearTabProfesorSemestre() {
-                Tab tab = new Tab("Prof. vs Semestre");
-                Label titulo = new Label("Consultar asignaturas dictadas por un profesor en un semestre");
-                titulo.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-
-                TextField txtIdProfesor = new TextField();
-                txtIdProfesor.setPromptText("ID Profesor o CodDocente");
-
-                TextField txtSemestre = new TextField();
-                txtSemestre.setPromptText("Semestre (ej: 2025-1)");
-
-                Button btnBuscar = new Button("Buscar");
-                Label lblProfesor = new Label();
-                Label lblMensaje = new Label();
-                lblMensaje.setStyle("-fx-text-fill: red;");
-
-                ListView<String> listaAsignaturas = new ListView<>();
-
-                btnBuscar.setOnAction(e -> {
-                    lblProfesor.setText("");
-                    lblMensaje.setText("");
-                    listaAsignaturas.getItems().clear();
-
-                    String id = txtIdProfesor.getText().trim();
-                    String semestre = txtSemestre.getText().trim();
-
-                    if (id.isEmpty() || semestre.isEmpty()) {
-                        lblMensaje.setText("Debe ingresar ambos campos.");
-                        return;
-                    }
-
-                    Profesor profesor = buscarProfesorPorIdOCod(id);
-                    if (profesor == null) {
-                        lblMensaje.setText("Profesor no encontrado.");
-                        return;
-                    }
-
-                    List<Asignatura> resultado = obtenerAsignaturasProfesorSemestre(profesor, semestre);
-                    lblProfesor.setText("Profesor: " + profesor.getNombre());
-
-                    if (resultado.isEmpty()) {
-                        lblMensaje.setText("No se encontraron asignaturas para ese semestre.");
-                    } else {
-                        ObservableList<String> items = FXCollections.observableArrayList();
-                        for (Asignatura a : resultado) {
-                            items.add(a.getCodigoAsignatura() + " - " + a.getNombreAsignatura());
-                        }
-                        listaAsignaturas.setItems(items);
-                    }
-                });
-
-                VBox root = new VBox(10, titulo, new HBox(10, new Label("ID Prof:"), txtIdProfesor, new Label("Semestre:"), txtSemestre, btnBuscar), lblProfesor, lblMensaje, listaAsignaturas);
-                root.setPadding(new Insets(15));
-                tab.setContent(root);
-                return tab;
-            }
-
-            // 2. Consultar información de una asignatura
-            private Tab crearTabInfoAsignatura() {
-                Tab tab = new Tab("Info Asignatura");
-                Label titulo = new Label("Información detallada de Asignatura");
-                titulo.setStyle("-fx-font-weight: bold;");
-
-                TextField txtCodigo = new TextField();
-                txtCodigo.setPromptText("Código (ej: ADS101)");
-                Button btnBuscar = new Button("Buscar");
-
-                TextArea areaInfo = new TextArea();
-                areaInfo.setEditable(false);
-                areaInfo.setPrefHeight(300);
-
-                btnBuscar.setOnAction(e -> {
-                    areaInfo.clear();
-                    String codigo = txtCodigo.getText().trim();
-                    if (codigo.isEmpty()) {
-                        areaInfo.setText("Ingrese un código.");
-                        return;
-                    }
-
-                    Asignatura a = buscarAsignaturaPorCodigo(codigo);
-                    if (a == null) {
-                        areaInfo.setText("Asignatura no encontrada.");
-                        return;
-                    }
-
-                    StringBuilder sb = new StringBuilder();
-                    String dep = (a.getDepartamento() != null) ? a.getDepartamento().getNombreDepartamento() : "Sin departamento";
-
-                    sb.append("Código: ").append(a.getCodigoAsignatura()).append("\n");
-                    sb.append("Nombre: ").append(a.getNombreAsignatura()).append("\n");
-                    sb.append("Créditos: ").append(a.getCreditos()).append("\n");
-                    sb.append("Departamento: ").append(dep).append("\n");
-                    sb.append("------------------------------------------------\n");
-                    sb.append("CLASES DISPONIBLES:\n");
-
-                    if (a.getClases() != null) {
-                        for (Clase c : a.getClases()) {
-                            String prof = (c.getProfesor() != null) ? c.getProfesor().getNombre() : "Sin asignar";
-                            sb.append(String.format(" - ID: %s | Sem: %s | Horario: %s %s | Prof: %s\n",
-                                    c.getIdClase(), c.getSemestre(), c.getDias(), c.getHoras(), prof));
-                        }
-                    }
-                    areaInfo.setText(sb.toString());
-                });
-
-                VBox root = new VBox(10, titulo, new HBox(10, new Label("Código:"), txtCodigo, btnBuscar), areaInfo);
-                root.setPadding(new Insets(15));
-                tab.setContent(root);
-                return tab;
-            }
-
-            // 3. Gestión de Estudiantes (Adicionar/Retirar Clases)
-            private Tab crearTabGestionEstudiante() {
-                Tab tab = new Tab("Gestión Inscripciones");
-                Label titulo = new Label("Inscripción de Materias");
-                titulo.setStyle("-fx-font-weight: bold;");
-
-                // Ver Clases
-                TextField txtIdEst = new TextField();
-                txtIdEst.setPromptText("ID Estudiante");
-                Button btnVer = new Button("Ver Inscritas");
-                ListView<String> listaInscritas = new ListView<>();
-
-                // Acciones
-                TextField txtIdClase = new TextField();
-                txtIdClase.setPromptText("ID Clase");
-                Button btnInscribir = new Button("Inscribir");
-                Button btnRetirar = new Button("Retirar");
-                Label lblEstado = new Label();
-
-                // Lógica Ver
-                btnVer.setOnAction(e -> {
-                    listaInscritas.getItems().clear();
-                    String id = txtIdEst.getText().trim();
-                    Estudiante est = buscarEstudiantePorId(id);
-                    if (est == null) {
-                        lblEstado.setText("Estudiante no encontrado.");
-                        return;
-                    }
-                    lblEstado.setText("Estudiante: " + est.getNombre());
-                    List<Clase> clases = obtenerClasesEstudiante(est);
-                    for (Clase c : clases) {
-                        listaInscritas.getItems().add(c.getIdClase() + " - " + c.getSemestre() + " (" + c.getDias() + ")");
-                    }
-                });
-
-                // Lógica Inscribir
-                btnInscribir.setOnAction(e -> {
-                    String res = adicionarClaseAEstudiante(txtIdEst.getText().trim(), txtIdClase.getText().trim());
-                    lblEstado.setText(res);
-                    btnVer.fire(); // Actualizar lista
-                });
-
-                // Lógica Retirar
-                btnRetirar.setOnAction(e -> {
-                    String res = retirarClaseDeEstudiante(txtIdEst.getText().trim(), txtIdClase.getText().trim());
-                    lblEstado.setText(res);
-                    btnVer.fire(); // Actualizar lista
-                });
-
-                VBox root = new VBox(10, titulo,
-                        new HBox(10, new Label("Estudiante:"), txtIdEst, btnVer),
-                        listaInscritas,
-                        new Separator(),
-                        new HBox(10, new Label("Clase:"), txtIdClase, btnInscribir, btnRetirar),
-                        lblEstado
-                );
-                root.setPadding(new Insets(15));
-                tab.setContent(root);
-                return tab;
-            }
-
-            // 4. Estudiantes por Asignatura
-            private Tab crearTabEstudiantesAsignatura() {
-                Tab tab = new Tab("Listas de Clase");
-                Label titulo = new Label("Estudiantes inscritos en una Asignatura");
-
-                TextField txtCodAsig = new TextField();
-                txtCodAsig.setPromptText("Código Asignatura");
-                Button btnListar = new Button("Listar Estudiantes");
-                ListView<String> listaResultados = new ListView<>();
-                Label lblInfo = new Label();
-
-                btnListar.setOnAction(e -> {
-                    listaResultados.getItems().clear();
-                    String cod = txtCodAsig.getText().trim();
-                    Asignatura asig = buscarAsignaturaPorCodigo(cod);
-
-                    if (asig == null) {
-                        lblInfo.setText("Asignatura no encontrada.");
-                        return;
-                    }
-
-                    List<Estudiante> inscritos = obtenerEstudiantesDeAsignatura(asig);
-                    lblInfo.setText("Total inscritos: " + inscritos.size());
-
-                    if (inscritos.isEmpty()) {
-                        listaResultados.getItems().add("No hay estudiantes inscritos.");
-                    } else {
-                        for (Estudiante est : inscritos) {
-                            listaResultados.getItems().add(est.getIdEstudiante() + " - " + est.getNombre() + " (" + est.getEmail() + ")");
-                        }
-                    }
-                });
-
-                VBox root = new VBox(10, titulo, new HBox(10, txtCodAsig, btnListar), lblInfo, listaResultados);
-                root.setPadding(new Insets(15));
-                tab.setContent(root);
-                return tab;
-            }
-
-            // 5. Asignaturas por Departamento
-            private Tab crearTabAsignaturasPorDepartamento() {
-                Tab tab = new Tab("Departamentos");
-                TextField txtIdDep = new TextField();
-                txtIdDep.setPromptText("ID Departamento (Numérico)");
-                Button btnBuscar = new Button("Consultar");
-                ListView<String> lista = new ListView<>();
-                Label lblError = new Label();
-
-                btnBuscar.setOnAction(e -> {
-                    lista.getItems().clear();
-                    lblError.setText("");
-                    try {
-                        int id = Integer.parseInt(txtIdDep.getText().trim());
-                        Departamento dep = buscarDepartamentoPorId(id);
-                        if (dep == null) {
-                            lblError.setText("Departamento no encontrado.");
-                            return;
-                        }
-                        lista.getItems().add("Departamento: " + dep.getNombreDepartamento());
-                        if (dep.getAsignaturas() != null) {
-                            for (Asignatura a : dep.getAsignaturas()) {
-                                lista.getItems().add(" > " + a.getCodigoAsignatura() + " - " + a.getNombreAsignatura());
-                            }
-                        }
-                    } catch (NumberFormatException ex) {
-                        lblError.setText("El ID debe ser numérico.");
-                    }
-                });
-
-                VBox root = new VBox(10, new Label("Consulta por Departamento"), new HBox(10, txtIdDep, btnBuscar), lblError, lista);
-                root.setPadding(new Insets(15));
-                tab.setContent(root);
-                return tab;
-            }
-
-            // 6. Información Profesor
-            private Tab crearTabInfoProfesor() {
-                Tab tab = new Tab("Info Profesor");
-                TextField txtId = new TextField();
-                txtId.setPromptText("ID Profesor");
-                Button btnBuscar = new Button("Buscar");
-                TextArea area = new TextArea();
-                area.setEditable(false);
-
-                btnBuscar.setOnAction(e -> {
-                    Profesor p = buscarProfesorPorIdOCod(txtId.getText().trim());
-                    if (p != null) {
-                        area.setText("Nombre: " + p.getNombre() + "\nEmail: " + p.getEmail() +
-                                "\nSueldo: " + p.getSueldo() + "\nHoras: " + p.getHorasSemanales());
-                    } else {
-                        area.setText("Profesor no encontrado.");
-                    }
-                });
-
-                VBox root = new VBox(10, new Label("Información de Profesor"), new HBox(10, txtId, btnBuscar), area);
-                root.setPadding(new Insets(15));
-                tab.setContent(root);
-                return tab;
-            }
-
-            // 7. Crear Asignatura
-            private Tab crearTabCrearAsignatura() {
-                Tab tab = new Tab("Crear Asignatura");
-                TextField txtCod = new TextField(); txtCod.setPromptText("Código");
-                TextField txtNom = new TextField(); txtNom.setPromptText("Nombre");
-                TextField txtCred = new TextField(); txtCred.setPromptText("Créditos");
-                CheckBox chkIngles = new CheckBox("Requiere Inglés");
-                TextField txtDep = new TextField(); txtDep.setPromptText("ID Departamento (Opcional)");
-                Button btnCrear = new Button("Guardar Asignatura");
-                Label lblRes = new Label();
-
-                btnCrear.setOnAction(e -> {
-                    try {
-                        String codigo = txtCod.getText().trim();
-                        if (buscarAsignaturaPorCodigo(codigo) != null) {
-                            lblRes.setText("Error: El código ya existe.");
-                            return;
-                        }
-                        int creditos = Integer.parseInt(txtCred.getText().trim());
-
-                        Asignatura nueva = new Asignatura(codigo, txtNom.getText().trim(), creditos, chkIngles.isSelected());
-                        asignaturas.add(nueva);
-
-                        if (!txtDep.getText().isEmpty()) {
-                            Departamento d = buscarDepartamentoPorId(Integer.parseInt(txtDep.getText().trim()));
-                            if (d != null) {
-                                d.getAsignaturas().add(nueva);
-                                nueva.setDepartamento(d);
-                                lblRes.setText("Asignatura creada y vinculada a " + d.getNombreDepartamento());
-                            } else {
-                                lblRes.setText("Asignatura creada (Depto no encontrado).");
-                            }
-                        } else {
-                            lblRes.setText("Asignatura creada exitosamente.");
-                        }
-                        // Limpiar campos
-                        txtCod.clear(); txtNom.clear(); txtCred.clear(); txtDep.clear();
-                    } catch (Exception ex) {
-                        lblRes.setText("Error: Verifique los datos numéricos.");
-                    }
-                });
-
-                VBox root = new VBox(10, new Label("Nueva Asignatura"), txtCod, txtNom, txtCred, chkIngles, txtDep, btnCrear, lblRes);
-                root.setPadding(new Insets(20));
-                tab.setContent(root);
-                return tab;
-            }
-
-            // ============================================================
-            // =================  LOGICA DE NEGOCIO  ======================
-            // ============================================================
-
-            private void inicializarDatosEjemplo() {
-                // Solo se llama si no hay datos cargados
-                Profesor p1 = new Profesor("juan@uni.edu", "Juan Perez", 16, 3000, "DOC1", "P1");
-                profesores.add(p1);
-
-                Asignatura a1 = new Asignatura("MAT1", "Matematicas", 3, false);
-                asignaturas.add(a1);
-
-                Clase c1 = new Clase("C1", "2025-1", "Lun-Mie", "8-10", "101", 30, p1);
-                a1.getClases().add(c1);
-
-                Estudiante e1 = new Estudiante("Carlos", "E1", "carlos@mail.com", "Sistemas", true);
-                estudiantes.add(e1);
-            }
-
-            private Profesor buscarProfesorPorIdOCod(String id) {
-                if (id == null) return null;
-                return profesores.stream()
-                        .filter(p -> id.equals(p.getId_Profesor()) || id.equals(p.getCodDocente()))
-                        .findFirst().orElse(null);
-            }
-
-            private Asignatura buscarAsignaturaPorCodigo(String codigo) {
-                if (codigo == null) return null;
-                return asignaturas.stream()
-                        .filter(a -> codigo.equals(a.getCodigoAsignatura()))
-                        .findFirst().orElse(null);
-            }
-
-            private Estudiante buscarEstudiantePorId(String id) {
-                if (id == null) return null;
-                return estudiantes.stream()
-                        .filter(e -> id.equals(e.getIdEstudiante()))
-                        .findFirst().orElse(null);
-            }
-
-            private Departamento buscarDepartamentoPorId(int id) {
-                return departamentos.stream()
-                        .filter(d -> d.getIdDepartamento() == id)
-                        .findFirst().orElse(null);
-            }
-
-            private List<Asignatura> obtenerAsignaturasProfesorSemestre(Profesor profesor, String semestre) {
-                List<Asignatura> resultado = new ArrayList<>();
-                for (Asignatura a : asignaturas) {
-                    if (a.getClases() != null) {
-                        for (Clase c : a.getClases()) {
-                            if (c.getProfesor() != null &&
-                                    c.getProfesor().getId_Profesor().equals(profesor.getId_Profesor()) &&
-                                    c.getSemestre().equals(semestre)) {
-                                resultado.add(a);
-                                break;
-                            }
-                        }
-                    }
-                }
-                return resultado;
-            }
-
-            private List<Clase> obtenerClasesEstudiante(Estudiante est) {
-                List<Clase> resultado = new ArrayList<>();
-                for (Asignatura a : asignaturas) {
-                    if (a.getClases() != null) {
-                        for (Clase c : a.getClases()) {
-                            // Nota: En un sistema real usaríamos equals() en Estudiante,
-                            // aquí comparamos IDs para asegurar la persistencia JSON
-                            boolean estaInscrito = c.getEstudiantesInscritos().stream()
-                                    .anyMatch(e -> e.getIdEstudiante().equals(est.getIdEstudiante()));
-                            if (estaInscrito) {
-                                resultado.add(c);
-                            }
-                        }
-                    }
-                }
-                return resultado;
-            }
-
-            private List<Estudiante> obtenerEstudiantesDeAsignatura(Asignatura asig) {
-                Set<String> idsUnicos = new HashSet<>();
-                List<Estudiante> resultado = new ArrayList<>();
-
-                if (asig.getClases() != null) {
-                    for (Clase c : asig.getClases()) {
-                        for (Estudiante e : c.getEstudiantesInscritos()) {
-                            if (idsUnicos.add(e.getIdEstudiante())) { // Evita duplicados si el estudiante esta en 2 clases
-                                resultado.add(e);
-                            }
-                        }
-                    }
-                }
-                return resultado;
-            }
-
-            private String adicionarClaseAEstudiante(String idEst, String idClase) {
-                Estudiante e = buscarEstudiantePorId(idEst);
-                if (e == null) return "Estudiante no existe.";
-
-                // Buscar la clase en todas las asignaturas
-                Clase clase = null;
-                for(Asignatura a : asignaturas) {
-                    if(a.getClases() != null) {
-                        for(Clase c : a.getClases()) {
-                            if(c.getIdClase().equals(idClase)) {
-                                clase = c; break;
-                            }
-                        }
-                    }
-                }
-                if (clase == null) return "Clase no encontrada.";
-
-                // Validar cupo
-                if (clase.getEstudiantesInscritos().size() >= clase.getCupoMaximo()) return "Clase llena.";
-
-                // Validar duplicado
-                boolean yaInscrito = clase.getEstudiantesInscritos().stream()
-                        .anyMatch(est -> est.getIdEstudiante().equals(e.getIdEstudiante()));
-
-                if (yaInscrito) return "Ya está inscrito.";
-
-                clase.getEstudiantesInscritos().add(e);
-                return "Inscripción exitosa.";
-            }
-
-            private String retirarClaseDeEstudiante(String idEst, String idClase) {
-                Estudiante e = buscarEstudiantePorId(idEst);
-                if (e == null) return "Estudiante no existe.";
-
-                boolean borrado = false;
-                for(Asignatura a : asignaturas) {
-                    if(a.getClases() != null) {
-                        for(Clase c : a.getClases()) {
-                            if(c.getIdClase().equals(idClase)) {
-                                borrado = c.getEstudiantesInscritos().removeIf(est -> est.getIdEstudiante().equals(e.getIdEstudiante()));
-                            }
-                        }
-                    }
-                }
-                return borrado ? "Retiro exitoso." : "No estaba inscrito o clase no existe.";
-            }
-        }
-
-        if (claseNueva.getEstudiantesInscritos().contains(est)) {
-            return "El estudiante ya está inscrito en la clase nueva.";
         }
 
         if (claseNueva.getEstudiantesInscritos().size() >= claseNueva.getCupoMaximo()) {
-            return "La clase nueva está llena; no se puede cambiar.";
+            return "La clase nueva está llena.";
         }
 
         claseActual.getEstudiantesInscritos().remove(est);
@@ -1529,5 +919,61 @@ import java.util.Set;
                 + " | Horas: " + c.getHoras()
                 + " | Salón: " + c.getSalon()
                 + " | Profesor: " + prof;
+    }
+
+    // ============================================================
+    // =======================  UI HELPERS  =======================
+    // ============================================================
+
+    private VBox crearCardBase(String titulo, String subtitulo) {
+        Label lblTitulo = new Label(titulo);
+        lblTitulo.setFont(Font.font("Inter", FontWeight.BOLD, 18));
+        lblTitulo.setTextFill(Color.web("#0f172a"));
+
+        Label lblSub = new Label(subtitulo);
+        lblSub.setTextFill(Color.web("#334155"));
+
+        VBox card = new VBox(12, lblTitulo, lblSub);
+        card.setPadding(new Insets(14));
+        card.setStyle(CARD_STYLE);
+        return card;
+    }
+
+    private TextField crearTextField(String placeholder) {
+        TextField tf = new TextField();
+        tf.setPromptText(placeholder);
+        tf.setStyle("-fx-background-radius: 10; -fx-border-radius: 10;" +
+                "-fx-padding: 8 10; -fx-border-color: #cbd5e1;" +
+                "-fx-focus-color: #2563eb; -fx-faint-focus-color: rgba(37,99,235,0.2);");
+        return tf;
+    }
+
+    private Button crearBotonPrimario(String texto) {
+        Button btn = new Button(texto);
+        btn.setStyle("-fx-background-color: linear-gradient(to right, #2563eb, #1d4ed8);" +
+                "-fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 10;" +
+                "-fx-padding: 8 14;" +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 6,0,0,2);");
+        return btn;
+    }
+
+    private Button crearBotonSecundario(String texto) {
+        Button btn = new Button(texto);
+        btn.setStyle("-fx-background-color: #e2e8f0; -fx-text-fill: #0f172a;" +
+                "-fx-background-radius: 10; -fx-padding: 8 14;" +
+                "-fx-border-color: #cbd5e1; -fx-border-radius: 10;");
+        return btn;
+    }
+
+    private Label crearLabelSecundario() {
+        Label lbl = new Label();
+        lbl.setTextFill(Color.web("#0f172a"));
+        return lbl;
+    }
+
+    private Label crearLabelError() {
+        Label lbl = new Label();
+        lbl.setTextFill(Color.web("#b91c1c"));
+        return lbl;
     }
 }
