@@ -1,6 +1,11 @@
 package Modelo;
 
-public class Profesor {
+import java.io.Serial;
+import java.io.Serializable;
+
+public class Profesor implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private String nombre;
     private String email;
     private int horasSemanales;

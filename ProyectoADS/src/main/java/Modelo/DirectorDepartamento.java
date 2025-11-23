@@ -1,6 +1,12 @@
 package Modelo;
 
-public class DirectorDepartamento {
+import java.io.Serial;
+import java.io.Serializable;
+
+public class DirectorDepartamento implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private String nombreDepa;
     private String id_Departamento;

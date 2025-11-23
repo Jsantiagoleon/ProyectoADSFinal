@@ -1,7 +1,11 @@
 package Modelo;
 
-public class Estudiante
-{
+import java.io.Serial;
+import java.io.Serializable;
+
+public class Estudiante implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private int id_Estudiante;
     private String nombre;
     private String idEstudiante;

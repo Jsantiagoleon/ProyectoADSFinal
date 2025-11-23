@@ -1,9 +1,13 @@
 package Modelo;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Departamento {
+public class Departamento implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private int idDepartamento;
     private String nombreDepartamento;

@@ -1,7 +1,12 @@
 package Modelo;
 
-public class DirectorCarrera
-{
+import java.io.Serial;
+import java.io.Serializable;
+
+public class DirectorCarrera implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     private String nombre;
     private String email;
 

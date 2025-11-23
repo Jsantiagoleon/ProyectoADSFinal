@@ -1,9 +1,13 @@
 package Modelo;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 
-public class Clase {
+public class Clase implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private String idClase;
     private String semestre;

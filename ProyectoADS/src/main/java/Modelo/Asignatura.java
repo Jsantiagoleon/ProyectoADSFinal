@@ -1,9 +1,13 @@
 package Modelo;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Asignatura  {
+public class Asignatura implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private String codigoAsignatura;
     private String nombreAsignatura;
     private int creditos;
